@@ -11,12 +11,27 @@ abstract class MainDb : RoomDatabase() {
     abstract fun getDao(): Dao
 
     companion object{
+        @Volatile
+        private var INSTANCE: MainDb? = null
+
         fun getDb(context: Context): MainDb {
-            return Room.databaseBuilder(
-                context.applicationContext,
-                MainDb::class.java,
-                "test.db"
-            ).build()
+            val tempInstance =
+                INSTANCE
+            if (tempInstance != null) {
+                return tempInstance
+            }
+            return INSTANCE
+                ?: synchronized(this) {
+                    val instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        MainDb::class.java,
+                        "app_database"
+                    )
+                        .createFromAsset("database/test.db")
+                        .build()
+                    INSTANCE = instance
+                    return instance
+                }
         }
     }
 }
