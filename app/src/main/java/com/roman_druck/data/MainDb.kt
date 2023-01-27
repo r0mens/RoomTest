@@ -8,13 +8,14 @@ import com.roman_druck.entitis.Item
 
 @Database (entities = [Item::class], version = 1)
 abstract class MainDb : RoomDatabase() {
-    abstract fun getDao(): Dao
+    abstract fun itemDao(): Dao
 
-    companion object{
+
+    companion object {
         @Volatile
         private var INSTANCE: MainDb? = null
 
-        fun getDb(context: Context): MainDb {
+        fun itemDb(context: Context): MainDb {
             val tempInstance =
                 INSTANCE
             if (tempInstance != null) {
@@ -27,11 +28,16 @@ abstract class MainDb : RoomDatabase() {
                         MainDb::class.java,
                         "app_database"
                     )
+
                         .createFromAsset("database/test.db")
                         .build()
+
                     INSTANCE = instance
                     return instance
+
                 }
+
+
         }
     }
 }

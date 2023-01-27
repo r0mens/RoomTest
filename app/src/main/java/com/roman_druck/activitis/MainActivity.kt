@@ -1,39 +1,56 @@
 package com.roman_druck.activitis
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.lifecycle.asLiveData
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.roman_druck.data.Dao
 import com.roman_druck.data.MainDb
 import com.roman_druck.entitis.Item
 import com.roman_druck.roomtest.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val db = MainDb.getDb(this)
-        db.getDao().getAllItem().asLiveData().observe(this){ list->
-            binding.tvText.text = ""
-            list.forEach {
-                val text = " ${it.id}  ${it.name}  ${it.price}\n"
-                binding.tvText.append(text)
-            }
+
+        val db = MainDb.itemDb(this)
+        val itemDao = db.itemDao()
+
+        binding.btSubmit.setOnClickListener {
+            val name = binding.adName.text.toString()
+            searchItemByName(itemDao, name)
         }
 
-        binding.btSave.setOnClickListener{
-            val item = Item(null,
+        binding.btSave.setOnClickListener {
+            val item = Item(
+                null,
                 binding.adName.text.toString(),
                 binding.adPrice.text.toString()
-
             )
-            Thread{
-                db.getDao().insertItem(item)
+            Thread {
+                itemDao.insertItem(item)
+                Toast.makeText(this, "Data saved successfully", Toast.LENGTH_SHORT).show()
             }.start()
+            Thread.sleep(1000) // Add a delay to wait for the thread to finish
         }
 
+    }
+
+    private fun searchItemByName(itemDao: Dao, name: String) {
+        itemDao.getItemByName(name).observe(this) { item ->
+            if (item != null) {
+                val text = "     ${item.name}   \n"
+                //val text2 = item.price
+                //binding.adPrice.append(text2)
+                binding.tvText.append(text)
+
+            } else {
+                Toast.makeText(this, "No item found with name $name", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     }
 }
